@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 from django.shortcuts import redirect
 from django.urls import reverse
 
@@ -9,8 +10,9 @@ from .forms import PostForm, CommentForm
 from .utils import paginator_project
 
 
+@cache_page(20, key_prefix='index_page')
 def index(request):
-    post_list = Post.objects.all()
+    post_list = Post.objects.select_related('author').all()
     page_obj = paginator_project(request, post_list)
     context = {'page_obj': page_obj}
     return render(request, 'posts/index.html', context)
@@ -28,13 +30,9 @@ def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = Post.objects.filter(author_id=author)
     page_obj = paginator_project(request, posts)
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
-            user=request.user,
-            author=author
-        ).exists()
-    else:
-        following = False
+    following = request.user.is_authenticated and Follow.objects.filter(
+        user=request.user, author=author
+    ).exists()
     profile = author
     context = {
         'page_obj': page_obj,

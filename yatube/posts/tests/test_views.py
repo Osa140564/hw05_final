@@ -65,6 +65,7 @@ class PostTests(TestCase):
             content=self.small_gif,
             content_type='image/gif'
         )
+        cache.clear()
 
     def test_about_page_uses_correct_template(self):
 
@@ -154,6 +155,7 @@ class PaginatorViewsTest(TestCase):
                      group=cls.group)
             )
         Post.objects.bulk_create(cls.posts)
+        cache.clear()
 
     def setUp(self):
         self.guest_client = Client()
